@@ -3,7 +3,7 @@ title: "Measles Susceptibility in Glasgow Primary School Children"
 author: "DAS Group 15"
 date: today
 format:
-  html:
+  pdf:
     toc: false
     number-sections: true
 execute:
@@ -226,7 +226,7 @@ Just going to insert code that fits Poisson model here. We would need to introdu
 model_pois <- glm(Y ~ yr_c + post + yr_c*post + offset(log(N)), family = poisson, dat)
 
 # Model summary
-tab_model(model_pois, show.aic = T, show.ci = F)
+tab_model(model_pois, show.aic = T, show.ci = F, show.dev = T)
 
 # AIC comparison
 AIC(model_binom, model_pois) %>% kable() %>% kable_styling()
@@ -253,6 +253,6 @@ dat_alt$yr_c <- dat_alt$yr_c - 4
 model_binom_alt <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial, data = dat_alt)
 
 # Model summary
-tab_model(model_binom_alt, show.ci = F, show.aic = T)
+tab_model(model_binom_alt, show.ci = F, show.aic = T, show.dev = T)
 
 ```
