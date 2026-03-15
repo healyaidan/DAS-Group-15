@@ -187,6 +187,11 @@ indicator:
 <!--
 We should probably directly introduce the pi variable as the our proportion (y_i/n_i).
 -->
+<!--TB
+Included Deviance
+I will discuss the deviance and chisq
+-->
+
 
 $$
 \log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 \cdot \text{Year}_i^* + \beta_2 \cdot \mathbb{1}[\text{post}] + \beta_3 \cdot (\text{Year}_i^* \times \mathbb{1}[\text{post}])
@@ -206,31 +211,24 @@ Fitting the this proposed model produced the following summary output.
 model_binom <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial, dat)# Fit Binomial model
 
 # Model summary
-tab_model(model_binom, show.aic = T, show.ci = F)
+tab_model(model_binom, show.aic = T, show.ci = F,show.dev = T)
 
+```
+
+-->
+<!--TB
+to test significance of each variable in the model. This shows all are significant(small p-values). Additionally chi square do
+-->
+```{r}
+#| echo: false
+summary(model_binom)
+?tab_model
 ```
 
 <!--
 Need to interpret these coefficients.
 -->
 
-<!--
-Just going to insert code that fits Poisson model here. We would need to introduce this properly.
--->
-
-```{r}
-#| echo: false
-#| eval: false
-
-# Fit Poisson model
-model_pois <- glm(Y ~ yr_c + post + yr_c*post + offset(log(N)), family = poisson, dat)
-
-# Model summary
-tab_model(model_pois, show.aic = T, show.ci = F, show.dev = T)
-
-# AIC comparison
-AIC(model_binom, model_pois) %>% kable() %>% kable_styling()
-```
 
 <!--
 An idea for addressing question 2 is by moving our post covariate to mark years after 
@@ -238,6 +236,10 @@ An idea for addressing question 2 is by moving our post covariate to mark years 
 after 2008. By doing some model comparisons, we can infer that the change in measles 
 susceptibility occurred post 2008.
 I've included what such an alternative model may look like.
+-->
+<!--TB
+Included Deviance
+I will discuss the deviance and chisq
 -->
 
 ```{r}
@@ -254,5 +256,34 @@ model_binom_alt <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial
 
 # Model summary
 tab_model(model_binom_alt, show.ci = F, show.aic = T, show.dev = T)
-
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#| echo: false
+#| eval: false
+
+# Fit Poisson model
+model_pois <- glm(Y ~ yr_c + post + yr_c*post + offset(log(N)), family = poisson, dat)
+
+# Model summary
+tab_model(model_pois, show.aic = T, show.ci = F)
+
+# AIC comparison
+AIC(model_binom, model_pois) %>% kable() %>% kable_styling()
+```
+
