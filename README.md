@@ -15,7 +15,7 @@ Deliverable: a concise **Quarto report** (max **6 pages**) summarising:
 ## Research questions
 We address:
 1. **Did Glasgow exhibit a change in measles susceptibility following the retraction of the Wakefield article?**
-2. **Did any change occur specifically in 2002**
+2. **Did any change occur specifically in 2004**
 
 Collaboration requirements:
 - Meaningful commit messages and commit comments
