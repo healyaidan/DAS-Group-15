@@ -210,6 +210,23 @@ model_binom <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial, da
 tab_model(model_binom, show.aic = T, show.ci = F, show.dev = T)
 
 ```
+<!--
+Checking for overdispersion. 
+-->
+```{r}
+#| echo: false
+
+# Overdispersion diagnostic 
+# Ratio > 1 suggests overdispersion, meaning binomial SEs
+# may be too narrow and p-values too optimistic
+disp_ratio <- deviance(model_binom) / df.residual(model_binom)
+cat("Dispersion ratio:", round(disp_ratio, 3), "\n")
+
+
+```
+
+The residual deviance of the binomial model (2044.5 on 927 df) gives a dispersion ratio of approximately 2.2, which exceeds the expected value of 1 under a correctly specified binomial model. This suggests the presence of overdispersion, meaning the standard errors from the binomial model may be too narrow. 
+
 
 <!--
 TB
