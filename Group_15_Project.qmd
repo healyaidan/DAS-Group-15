@@ -23,6 +23,7 @@ library(broom)
 library(knitr)
 library(kableExtra)
 library(sjPlot)
+library(performance)
 ```
 
 ```{r}
@@ -39,7 +40,7 @@ dat$yr_c <- dat$Year - 2004
 dat$post <- ifelse(dat$Year >= 2004, 1, 0)
 ```
 
-# Introduction
+# Introduction {#sec-intro}
 
 <!--
 Are we referencing for this report? If so, we will require some for this section.
@@ -65,7 +66,7 @@ measles susceptibility among primary school children in Glasgow changed
 over the period 1998--2012, and whether any change can be linked to the
 2004 partial retraction of the paper.
 
-The data cover 133 intermediate zones (IZs) in Glasgow, which are small
+The data covers 133 intermediate zones (IZs) in Glasgow, which are small
 geographic units of roughly 4,000 residents each. For each IZ and year,
 we have the number of primary school children susceptible to measles
 (`Y`) and the total number of primary school children (`N`).
@@ -76,7 +77,7 @@ The two questions we aim to answer are:
     retraction?
 2.  Did this change occur specifically around 2004?
 
-# Exploratory Data Analysis
+# Exploratory Data Analysis {#sec-exp}
 
 <!--
 Is the IZ column necessary? 
@@ -105,6 +106,19 @@ kable(year_sum,
       booktabs  = TRUE) %>%
   kable_styling(latex_options = "hold_position", font_size = 9) %>%
   add_header_above(c(" " = 2, "Proportion susceptible" = 4))
+```
+
+```{r}
+#| label: tbl-summary2
+#| tbl-cap: "Summary statistics for the proportion of primary school children susceptible to measles, by year."
+
+year_sum_percentages <- cbind(year_sum[,1], year_sum[,c(2:6)]*100)
+kable(year_sum_percentages[, -c(2)],
+      col.names = c("Year", "Mean", "SD", "Min", "Max"),
+      booktabs  = TRUE) %>%
+  kable_styling(latex_options = "hold_position", font_size = 9) %>%
+  add_header_above(c(" " = 1, "Percenatge susceptible (%)" = 4))
+  
 ```
 
 @tbl-summary shows how the mean proportion of susceptible children
@@ -171,7 +185,7 @@ ggplot(dat, aes(x = factor(Year), y = prop)) +
 moderate variation between IZs, which makes sense given that different
 areas will have different vaccination uptake.
 
-# Formal Analysis
+# Formal Analysis {#sec-formal}
 
 ## Model
 
@@ -188,15 +202,19 @@ indicator:
 We should probably directly introduce the pi variable as the our proportion (y_i/n_i).
 -->
 
-
 $$
 \log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 \cdot \text{Year}_i^* + \beta_2 \cdot \mathbb{1}[\text{post}] + \beta_3 \cdot (\text{Year}_i^* \times \mathbb{1}[\text{post}])
+$$
+$$
+\log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0  + \beta_1 \cdot \mathbf{1}[\text{2000}] + 
+\beta_2 \cdot \mathbf{1}[\text{2002}] + \beta_3 \cdot \mathbf{1}[\text{2004}] + \beta_4 \cdot \mathbf{1}[\text{2008}]
++ \beta_5 \cdot \mathbf{1}[\text{2010}] + \beta_6 \cdot \mathbf{1}[\text{2012}]
 $$
 
 where $\text{Year}^*$ is the year centred at 2004, and
 $\mathbb{1}[\text{post}]$ equals 1 for 2004 and later. The interaction
 $\beta_3$ captures whether the slope differs before vs after 2004. Here, 
-$\pi_i$ is the proportion of children susceptible to measles in year level $i$.
+$\pi_i$ is the probability of a child being susceptible to measles in year level $i$.
 
 Fitting the this proposed model produced the following summary output. 
 
@@ -222,6 +240,7 @@ Checking for overdispersion.
 disp_ratio <- deviance(model_binom) / df.residual(model_binom)
 cat("Dispersion ratio:", round(disp_ratio, 3), "\n")
 
+check_overdispersion(model_binom)#Alternatively
 
 ```
 
@@ -245,7 +264,7 @@ possible answer of code above: Model fit improved substantially compared with th
 
 <!--
 TB
-Summary gives us excact coefficients
+Summary gives us exact coefficients
 -->
 ```{r}
 #| echo: false
@@ -256,6 +275,7 @@ summary(model_binom)
 <!--
 Need to interpret these coefficients.
 -->
+
 <!--
 (TB - possible answer to the coefficients interpretation. Word count could be cut??) 
 The binomial logistic regression model suggests that measles susceptibility changed significantly over time and around the 2004 intervention point. Before 2004, the positive coefficient for `yr_c` ($\beta = 0.112$, $p < 0.001$) indicates that the log-odds of susceptibility were increasing each year. The coefficient for `post` ($\beta = -0.206$, $p = 0.001$) suggests a significant immediate decrease in susceptibility after 2004. Furthermore, the interaction term `yr_c:post` ($\beta = -0.162$, $p < 0.001$) indicates that the time trend changed after 2004, with the slope becoming negative. Overall, this suggests that susceptibility was rising before 2004 but began to decline slightly afterwards, indicating a significant change in trend following the retraction of the Wakefield article.
@@ -326,6 +346,22 @@ df <- 930 - 924
 pchisq(chi_stat, df = df, lower.tail = FALSE)
 ```
 
+
+```{r}
+#| echo: false
+#| eval: false
+
+print(check_model(model_year))
+print(check_model(model_binom))
+
+check_model(model_binom,
+            check = c("pp_check", "binned_residuals", "vif"))
+
+check_model(model_year,
+            check = c("pp_check", "binned_residuals", "qq", "influential_observations"))
+
+```
+
 <!--
 TB
 The year-specific logistic regression model shows that measles susceptibility varied significantly across years in Glasgow. Compared with the baseline year (1998), susceptibility increased significantly in 2000, 2002, 2004 and 2008, with the largest increase occurring in 2008 (OR = 1.70, $p < 0.001$). However, there was no significant difference in 2010 or 2012. This suggests that Glasgow did experience changes in measles susceptibility over time.
@@ -333,6 +369,7 @@ The year-specific logistic regression model shows that measles susceptibility va
 However, the results do not indicate a clear change occurring specifically in 2004, the year of the Wakefield article retraction. Instead, susceptibility appears to continue increasing after 2004 and peaks around 2008, suggesting the effect was not immediate.
 -->
 
+# Consclusion {#sec-conc}
 
 <!--
 TB (conclusion?? comparing all three models, rough draft)
@@ -340,23 +377,4 @@ This finding is consistent with the earlier piecewise logistic regression models
 -->
 
 
-
-
-
-
-
-
-```{r}
-#| echo: false
-#| eval: false
-
-# Fit Poisson model
-model_pois <- glm(Y ~ yr_c + post + yr_c*post + offset(log(N)), family = poisson, dat)
-
-# Model summary
-tab_model(model_pois, show.aic = T, show.ci = F)
-
-# AIC comparison
-AIC(model_binom, model_pois) %>% kable() %>% kable_styling()
-```
 
