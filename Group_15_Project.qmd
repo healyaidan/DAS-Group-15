@@ -42,6 +42,16 @@ dat$post <- ifelse(dat$Year >= 2004, 1, 0)
 
 # Introduction {#sec-intro}
 
+Since the late 1980s, the measles, mumps, and rubella (MMR) vaccine has been the foundation of childhood vaccination in the UK. However, a now-discredited report by Andrew Wakefield in 1998 that proposed a connection between the vaccine and autism badly damaged public trust. Due to this false information, vaccination rates dropped to almost 80% in some areas by 2003, which subsequently caused serious measles epidemics.
+
+Even if the Wakefield report was partially and fully retracted in 2004 and 2010, respectively, the timeframe for the restoration of public confidence and the ensuing decline in measles susceptibility is still crucial for analysis. This study assesses the measles susceptibility of primary school students in 133 intermediate zones (IZs) in Glasgow between 1998 and 2012 using data from the Scottish Childhood Immunisation Record System (SCIRS).
+
+This study evaluates the probabilities of susceptibility in each post-1998 year directly against the 1998 baseline, avoiding the assumption of a linear trend by treating each year as a categorical component. In particular, we want to address:
+
+1.Did Glasgow exhibit a statistically significant change in measles susceptibility relative to the 1998 baseline?
+
+2.Did the turning point in susceptibility coincide with the 2004 partial retraction, or was there a measurable lag in public health recovery
+
 <!--
 Are we referencing for this report? If so, we will require some for this section.
 Some interesting articles include:
@@ -49,33 +59,6 @@ Some interesting articles include:
 - https://www.bmj.com/content/342/bmj.c7452 (British Medical Journal)
 - https://www.chop.edu/vaccine-education-center/vaccine-safety/vaccines-and-other-conditions/autism (Children's Hospital of Philadelphia)
 --> 
-
-The measles, mumps and rubella (MMR) vaccine has been an important part
-of childhood immunisation programmes in the UK since the late 1980s. In
-1998, researcher Andrew Wakefield published a paper claiming a link between the MMR
-vaccine and autism. Although the study was later found to be fraudulent
-and was fully retracted in 2010, the media coverage it received caused
-vaccination rates to drop significantly, falling to around 80% coverage in some
-parts of the UK by 2003. This eventually contributed to a large measles
-outbreak in 2013.
-
-A partial retraction of the paper occurred in 2004, which helped public
-perception of the vaccine. This report uses data from the Scottish
-Childhood Immunisation Record System (SCIRS) to investigate whether
-measles susceptibility among primary school children in Glasgow changed
-over the period 1998--2012, and whether any change can be linked to the
-2004 partial retraction of the paper.
-
-The data covers 133 intermediate zones (IZs) in Glasgow, which are small
-geographic units of roughly 4,000 residents each. For each IZ and year,
-we have the number of primary school children susceptible to measles
-(`Y`) and the total number of primary school children (`N`).
-
-The two questions we aim to answer are:
-
-1.  Did measles susceptibility in Glasgow change following the Wakefield
-    retraction?
-2.  Did this change occur specifically around 2004?
 
 # Exploratory Data Analysis {#sec-exp}
 
@@ -318,33 +301,107 @@ The model centred at 2004 has a residual deviance of 2044.5 and AIC of 5156.5, w
 -->
 
 
+
+
+
+
+
+
 <!--
 TB (couldn't find it, so useless on github, hope i didn't mess up anything)
 Model with year as factor and analysis below
 -->
+## Modelling Measles Susceptibility by Year
+
+### Binomial Logistic Regression Model
+
+To assess variation in measles susceptibility across years, a binomial logistic regression model was fitted:
+
+$$
+Y_i \sim \text{Binomial}(N_i, p_i)
+$$
+
+$$
+\log\left(\frac{p_i}{1 - p_i}\right) = \beta_0 + \beta_1 \cdot \text{Year}_{2000,i} + \beta_2 \cdot \text{Year}_{2002,i} + \cdots + \beta_6 \cdot \text{Year}_{2012,i}
+$$
+
+where \(p_i\) is the probability that a child in area \(i\) is susceptible to measles, and 1998 is treated as the reference category.
+
 ```{r}
-#| echo: false
+#| include: false
 #| tbl-cap: "Table 4: Odds Ratios for Year-on-Year Susceptibility Relative to 1998 Baseline"
+dat$Year <- as.factor(dat$Year)
 model_year <- glm(
-  cbind(Y, N - Y) ~ factor(Year),
+  cbind(Y, N - Y) ~ Year,
   family = binomial,
   data = dat
 )
 
 tab_model(model_year, show.ci = F, show.aic = T, show.dev = T)
-
 ```
 
 ```{r}
 #| echo: false
+#| eval: false
 summary(model_year)
 ```
 
 ```{r}
-chi_stat <- 2179.6 - 1966.6
-df <- 930 - 924
-pchisq(chi_stat, df = df, lower.tail = FALSE)
+#| include: false
+dispersion <- model_year$deviance / model_year$df.residual
+dispersion
 ```
+
+$$\hat{\phi} = \frac{\text{Residual Deviance}}{\text{Residual Degrees of Freedom}} = `r round(dispersion, 3)`$$
+Overdispersion was assessed using the binomial model, with the ratio of residual deviance to degrees of freedom exceeding 1, indicating the presence of over dispersion. To account for this, a quasibinomial model was fitted, which adjusts the standard errors to provide more reliable inference.
+
+To account for overdispersion, a quasibinomial model was fitted:
+$$
+Y_i \sim \text{Quasi-Binomial}(N_i, p_i, \phi)
+$$
+
+$$
+\log\left(\frac{p_i}{1 - p_i}\right)=\beta_0 + \beta_1 \cdot \text{Year}_{2000,i} + \cdots + \beta_6 \cdot \text{Year}_{2012,i}
+$$
+
+```{r}
+#| echo: false
+#| tbl-cap: "Odds Ratios for Year-on-Year Susceptibility Relative to 1998 Baseline"
+model2 <- glm(cbind(Y, N - Y) ~ Year, 
+                   data = dat, 
+                   family = quasibinomial)
+
+tab_model(model_year, show.ci = F, show.aic = T, show.dev = T)
+```
+
+The year-specific logistic regression model shows that measles susceptibility varied significantly across years in Glasgow. Compared with the baseline year (1998), susceptibility increased significantly in 2000, 2002, 2004 and 2008, with the largest increase occurring in 2008 (OR = 1.70, $p < 0.001$). However, there was no significant difference in 2010 or 2012. This suggests that Glasgow did experience changes in measles susceptibility over time.
+
+However, the results do not indicate a clear change occurring specifically in 2004, the year of the Wakefield article retraction. Instead, susceptibility appears to continue increasing after 2004 and peaks around 2008, suggesting the effect was not immediate.
+
+```{r}
+#| include: false
+summary(model2)
+```
+
+```{r}
+#| include: false
+pchisq(2179.6 - 1966.6, df = 930 - 924, lower.tail = FALSE)
+```
+
+To determine if "Year" is a significant predictor of susceptibility, we compared our model against a null model using a likelihood ratio test:
+
+$$
+\chi^2 = D_{\text{null}} - D_{\text{model}} = 2179.6 - 1966.6 = 213.0
+$$
+
+$$
+df = 930 - 924 = 6
+$$
+
+$$
+p = P\left(\chi^2_6 \ge 213.0\right) \approx 3.23 \times 10^{-43}
+$$
+The reduction in deviance from 2179.6 to 1966.6 corresponds to $\chi^2 = 213.0$ with 6 degrees of freedom ($p \approx 3.23 \times 10^{-43}$), providing strong evidence that including year significantly improves model fit, confirming that Glasgow exhibited a clear change in measles susceptibility between 1998 and 2012. This result is identical for both the binomial and quasibinomial models, as the quasibinomial approach adjusts only the standard errors and not the fitted values or deviance.
 
 
 ```{r}
@@ -362,19 +419,24 @@ check_model(model_year,
 
 ```
 
-<!--
-TB
-The year-specific logistic regression model shows that measles susceptibility varied significantly across years in Glasgow. Compared with the baseline year (1998), susceptibility increased significantly in 2000, 2002, 2004 and 2008, with the largest increase occurring in 2008 (OR = 1.70, $p < 0.001$). However, there was no significant difference in 2010 or 2012. This suggests that Glasgow did experience changes in measles susceptibility over time.
+```{r}
+#| echo: false
+#| fig-width: 8
+#| fig-height: 4
+#| fig-align: center
+print(check_model(model_year))
+```
+The diagnostic plots indicate that the year-based binomial model provides an adequate fit to the data. The posterior predictive check shows good agreement between observed and fitted distributions, while binned residuals exhibit no systematic deviations. There is no evidence of influential observations, and residuals appear well-calibrated. Minor discrepancies in the upper tail suggest slight underestimation of extreme values, but these do not materially affect the overall model fit. These plots are the same for the year-based quasibinomial model.
 
-However, the results do not indicate a clear change occurring specifically in 2004, the year of the Wakefield article retraction. Instead, susceptibility appears to continue increasing after 2004 and peaks around 2008, suggesting the effect was not immediate.
--->
 
 # Consclusion {#sec-conc}
-
 <!--
-TB (conclusion?? comparing all three models, rough draft)
-This finding is consistent with the earlier piecewise logistic regression models. The model centred at 2004 indicated a significant change in trend after 2004 but still showed susceptibility increasing before that point. When the model was centred at 2008, model fit improved further (lower residual deviance and AIC), suggesting that the change in susceptibility may have occurred later than 2004. Taken together, the models suggest that while measles susceptibility changed over time in Glasgow, the shift did not occur precisely in 2004 and instead appears to have occurred closer to 2008.
+TB(brief conclusion)
+The results indicate that measles susceptibility varied significantly across years. Compared with 1998, susceptibility increased significantly in the early 2000s and peaked around 2008, before declining in later years. Evidence of overdispersion suggests that the quasibinomial model provides more reliable standard errors, but the overall conclusions remain unchanged
 -->
+
+
+
 
 
 
