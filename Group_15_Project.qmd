@@ -53,19 +53,12 @@ This study evaluates the probabilities of susceptibility in each post-1998 year 
 2.Did the turning point in susceptibility coincide with the 2004 partial retraction, or was there a measurable lag in public health recovery
 
 <!--
-Are we referencing for this report? If so, we will require some for this section.
-Some interesting articles include:
 - https://pmc.ncbi.nlm.nih.gov/articles/PMC3136032/ (National Institutes of Health)
 - https://www.bmj.com/content/342/bmj.c7452 (British Medical Journal)
 - https://www.chop.edu/vaccine-education-center/vaccine-safety/vaccines-and-other-conditions/autism (Children's Hospital of Philadelphia)
 --> 
 
 # Exploratory Data Analysis {#sec-exp}
-
-<!--
-Is the IZ column necessary? 
-Would this table be more readable as a % rather than raw proportion?
--->
 
 ```{r}
 # summarise by year - want mean proportion, sd, min, max per year
@@ -84,23 +77,11 @@ year_sum <- dat %>%
 #| label: tbl-summary
 #| tbl-cap: "Summary statistics for the proportion of primary school children susceptible to measles, by year."
 
-kable(year_sum,
-      col.names = c("Year", "IZs", "Mean", "SD", "Min", "Max"),
-      booktabs  = TRUE) %>%
-  kable_styling(latex_options = "hold_position", font_size = 9) %>%
-  add_header_above(c(" " = 2, "Proportion susceptible" = 4))
-```
-
-```{r}
-#| label: tbl-summary2
-#| tbl-cap: "Summary statistics for the proportion of primary school children susceptible to measles, by year."
-
-year_sum_percentages <- cbind(year_sum[,1], year_sum[,c(2:6)]*100)
-kable(year_sum_percentages[, -c(2)],
+kable(year_sum[, -c(2)],
       col.names = c("Year", "Mean", "SD", "Min", "Max"),
       booktabs  = TRUE) %>%
   kable_styling(latex_options = "hold_position", font_size = 9) %>%
-  add_header_above(c(" " = 1, "Percenatge susceptible (%)" = 4))
+  add_header_above(c(" " = 1, "Proportion susceptible" = 4))
   
 ```
 
@@ -127,14 +108,9 @@ ggplot(year_sum, aes(x = Year, y = mean_p)) +
            label = "2004 retraction", hjust = 0, size = 3, colour = "firebrick") +
   labs(x = "Year", y = "Mean proportion susceptible") +
   theme_minimal()
+
 ```
 
-<!--
-Our explanatory analysis only addresses question 1. We could also 
-talk about how the downward trend only starts to take place after 2008, not 
-specifically 2004 as asked in question 2. Seems to imply it took at least 4 years
-for an uptake in MMR vaccines post partial retraction.
--->
 
 @fig-trend shows the overall pattern of susceptibility rising from 1998,
 peaks around 2003, then falls after 2004. This is consistent with the
@@ -143,10 +119,6 @@ uptake after the retraction. However, the change in the overall trend does not
 occur in 2004 directly. There appears to be an overall increase in susceptibility
 until 2008. That is, there appears to be a delayed effect.
 
-<!--
-Vertical line for 2004 appears to be misaligned when rendered. Moving it to 2004 
-blocks some of the information. Maybe remove it for this plot?
--->
 
 ```{r}
 #| label: fig-box
@@ -157,11 +129,10 @@ blocks some of the information. Maybe remove it for this plot?
 
 ggplot(dat, aes(x = factor(Year), y = prop)) +
   geom_boxplot(fill = "lightsteelblue", outlier.size = 0.7, outlier.alpha = 0.4) +
-#  geom_vline(xintercept = 6.5,   # 2004 is the 7th year (1998,99,00,01,02,03,2004)
- #            linetype = "dashed", colour = "firebrick") +
   labs(x = "Year", y = "Proportion susceptible") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
 @fig-box shows the distribution across IZs for each year. There is
@@ -181,9 +152,6 @@ We want to test whether the trend in susceptibility changed at 2004, so
 we fit a model with an interaction term between year and the post-2004
 indicator:
 
-<!--
-We should probably directly introduce the pi variable as the our proportion (y_i/n_i).
--->
 
 $$
 \log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 \cdot \text{Year}_i^* + \beta_2 \cdot \mathbb{1}[\text{post}] + \beta_3 \cdot (\text{Year}_i^* \times \mathbb{1}[\text{post}])
@@ -203,23 +171,26 @@ Fitting the this proposed model produced the following summary output.
 
 ```{r}
 #| echo: false
+#| output: false
 #| tbl-cap: "Table 2: Model summary for binomial model centred at 2004."
 
-model_binom <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial, dat)# Fit Binomial model
+# Fit Binomial model
+model_binom <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial, dat)
 
 # Model summary
 tab_model(model_binom, show.aic = T, show.ci = F, show.dev = T)
 
 ```
-<!--
-Checking for overdispersion. 
--->
+
+
 ```{r}
 #| echo: false
+#| output: false
 
 # Overdispersion diagnostic 
 # Ratio > 1 suggests overdispersion, meaning binomial SEs
 # may be too narrow and p-values too optimistic
+
 disp_ratio <- deviance(model_binom) / df.residual(model_binom)
 cat("Dispersion ratio:", round(disp_ratio, 3), "\n")
 
@@ -238,7 +209,9 @@ difference in deviance (null - residual deviance), using a chi-squared dis to te
 ```{r}
 #| echo: false
 #| output: false
+
 pchisq((2179.6-2044.5), df = 3, lower.tail = FALSE)
+
 ```
 <!--
 TB
@@ -252,25 +225,14 @@ Summary gives us exact coefficients
 ```{r}
 #| echo: false
 #| output: false
-summary(model_binom)
-```
 
-<!--
-Need to interpret these coefficients.
--->
+summary(model_binom)
+
+```
 
 <!--
 (TB - possible answer to the coefficients interpretation. Word count could be cut??) 
 The binomial logistic regression model suggests that measles susceptibility changed significantly over time and around the 2004 intervention point. Before 2004, the positive coefficient for `yr_c` ($\beta = 0.112$, $p < 0.001$) indicates that the log-odds of susceptibility were increasing each year. The coefficient for `post` ($\beta = -0.206$, $p = 0.001$) suggests a significant immediate decrease in susceptibility after 2004. Furthermore, the interaction term `yr_c:post` ($\beta = -0.162$, $p < 0.001$) indicates that the time trend changed after 2004, with the slope becoming negative. Overall, this suggests that susceptibility was rising before 2004 but began to decline slightly afterwards, indicating a significant change in trend following the retraction of the Wakefield article.
--->
-
-
-<!--
-An idea for addressing question 2 is by moving our post covariate to mark years after 
-2008 rather than 2004. That is, there seems to be a greater decline in susceptibility 
-after 2008. By doing some model comparisons, we can infer that the change in measles 
-susceptibility occurred post 2008.
-I've included what such an alternative model may look like.
 -->
 
 <!--
@@ -281,6 +243,7 @@ discussed deviance with repsect to previous model. This is below the code
 
 ```{r}
 #| echo: false
+#| output: false
 #| tbl-cap: "Table 3: Model summary for binomial model centred at 2008."
 
 # Define alternative dataset centred around 2008.
@@ -293,6 +256,7 @@ model_binom_alt <- glm(cbind(Y,N-Y) ~ yr_c + post + yr_c*post, family = binomial
 
 # Model summary
 tab_model(model_binom_alt, show.ci = F, show.aic = T, show.dev = T)
+
 ```
 
 <!--
@@ -301,77 +265,87 @@ The model centred at 2004 has a residual deviance of 2044.5 and AIC of 5156.5, w
 -->
 
 
-
-
-
-
-
-
 <!--
 TB (couldn't find it, so useless on github, hope i didn't mess up anything)
 Model with year as factor and analysis below
 -->
+
 ## Modelling Measles Susceptibility by Year
 
 ### Binomial Logistic Regression Model
 
-To assess variation in measles susceptibility across years, a binomial logistic regression model was fitted:
+To assess variation in measles susceptibility, a binomial logistic regression model was fitted with year taken to be a categorical variable:
 
 $$
-Y_i \sim \text{Binomial}(N_i, p_i)
+Y_i \sim \text{Binomial}(N_i, p_i),
 $$
 
 $$
-\log\left(\frac{p_i}{1 - p_i}\right) = \beta_0 + \beta_1 \cdot \text{Year}_{2000,i} + \beta_2 \cdot \text{Year}_{2002,i} + \cdots + \beta_6 \cdot \text{Year}_{2012,i}
+\log\left(\frac{p_i}{1 - p_i}\right) = \beta_0 + \beta_1 \cdot \mathbb{1}[\text{Year}_{2000,i}] + \beta_2 \cdot \mathbb{1}[\text{Year}_{2002,i}] + \cdots + \beta_6 \cdot \mathbb{1}[\text{Year}_{2012,i}],
 $$
 
-where \(p_i\) is the probability that a child in area \(i\) is susceptible to measles, and 1998 is treated as the reference category.
+where $p_i$ is the probability that a child in year level $i$ is susceptible to measles where $1998$ is treated as the reference category.
 
 ```{r}
-#| include: false
+#| echo: false
+#| eval: false
 #| tbl-cap: "Table 4: Odds Ratios for Year-on-Year Susceptibility Relative to 1998 Baseline"
+
 dat$Year <- as.factor(dat$Year)
+
 model_year <- glm(
   cbind(Y, N - Y) ~ Year,
   family = binomial,
   data = dat
 )
-
 tab_model(model_year, show.ci = F, show.aic = T, show.dev = T)
+
 ```
 
 ```{r}
 #| echo: false
 #| eval: false
+
 summary(model_year)
+
 ```
 
 ```{r}
-#| include: false
-dispersion <- model_year$deviance / model_year$df.residual
-dispersion
+#| echo: false
+
+#dispersion <- model_year$deviance / model_year$df.residual
+#dispersion
+
+dispersion <- check_overdispersion(model_binom)$dispersion_ratio
+
 ```
 
-$$\hat{\phi} = \frac{\text{Residual Deviance}}{\text{Residual Degrees of Freedom}} = `r round(dispersion, 3)`$$
-Overdispersion was assessed using the binomial model, with the ratio of residual deviance to degrees of freedom exceeding 1, indicating the presence of over dispersion. To account for this, a quasibinomial model was fitted, which adjusts the standard errors to provide more reliable inference.
+Overdispersion was assessed for the fitted binomial model, resulting in a overdispersion ratio of $1.849$ and a $p$-value $<0.001$. As this ratio greater than $1$, there is strong evidence to suggest that overdispersion is present in this model. To account for this, a quasibinomial model was fitted, which adjusts the standard errors to provide more reliable inference:
 
-To account for overdispersion, a quasibinomial model was fitted:
+<!--
+\hat{\phi} = \frac{\text{Residual Deviance}}{\text{Residual Degrees of Freedom}} = `r round(dispersion, 3)`
+-->
+
 $$
 Y_i \sim \text{Quasi-Binomial}(N_i, p_i, \phi)
 $$
-
-$$
+<!--
 \log\left(\frac{p_i}{1 - p_i}\right)=\beta_0 + \beta_1 \cdot \text{Year}_{2000,i} + \cdots + \beta_6 \cdot \text{Year}_{2012,i}
-$$
+-->
+
+The Quasi-binomial model produces the following coefficient summary tabel,
 
 ```{r}
 #| echo: false
 #| tbl-cap: "Odds Ratios for Year-on-Year Susceptibility Relative to 1998 Baseline"
-model2 <- glm(cbind(Y, N - Y) ~ Year, 
-                   data = dat, 
-                   family = quasibinomial)
 
-tab_model(model_year, show.ci = F, show.aic = T, show.dev = T)
+model_year_quasi <- glm(
+  cbind(Y, N - Y) ~ factor(Year), 
+  family = quasibinomial,
+  data = dat)
+
+tab_model(model_year_quasi, show.dev = T)
+
 ```
 
 The year-specific logistic regression model shows that measles susceptibility varied significantly across years in Glasgow. Compared with the baseline year (1998), susceptibility increased significantly in 2000, 2002, 2004 and 2008, with the largest increase occurring in 2008 (OR = 1.70, $p < 0.001$). However, there was no significant difference in 2010 or 2012. This suggests that Glasgow did experience changes in measles susceptibility over time.
@@ -380,15 +354,23 @@ However, the results do not indicate a clear change occurring specifically in 20
 
 ```{r}
 #| include: false
-summary(model2)
+
+summary(model_year_quasi)
+
 ```
 
 ```{r}
 #| include: false
+
 pchisq(2179.6 - 1966.6, df = 930 - 924, lower.tail = FALSE)
+
 ```
 
 To determine if "Year" is a significant predictor of susceptibility, we compared our model against a null model using a likelihood ratio test:
+
+<!--
+If we are tight for space, we can consider removing this and just discussing deviance results in a paragraph.
+-->
 
 $$
 \chi^2 = D_{\text{null}} - D_{\text{model}} = 2179.6 - 1966.6 = 213.0
@@ -401,31 +383,20 @@ $$
 $$
 p = P\left(\chi^2_6 \ge 213.0\right) \approx 3.23 \times 10^{-43}
 $$
+
 The reduction in deviance from 2179.6 to 1966.6 corresponds to $\chi^2 = 213.0$ with 6 degrees of freedom ($p \approx 3.23 \times 10^{-43}$), providing strong evidence that including year significantly improves model fit, confirming that Glasgow exhibited a clear change in measles susceptibility between 1998 and 2012. This result is identical for both the binomial and quasibinomial models, as the quasibinomial approach adjusts only the standard errors and not the fitted values or deviance.
-
-
-```{r}
-#| echo: false
-#| eval: false
-
-print(check_model(model_year))
-print(check_model(model_binom))
-
-check_model(model_binom,
-            check = c("pp_check", "binned_residuals", "vif"))
-
-check_model(model_year,
-            check = c("pp_check", "binned_residuals", "qq", "influential_observations"))
-
-```
 
 ```{r}
 #| echo: false
 #| fig-width: 8
 #| fig-height: 4
 #| fig-align: center
-print(check_model(model_year))
+
+#print(check_model(model_year))
+print(check_model(model_year_quasi))
+
 ```
+
 The diagnostic plots indicate that the year-based binomial model provides an adequate fit to the data. The posterior predictive check shows good agreement between observed and fitted distributions, while binned residuals exhibit no systematic deviations. There is no evidence of influential observations, and residuals appear well-calibrated. Minor discrepancies in the upper tail suggest slight underestimation of extreme values, but these do not materially affect the overall model fit. These plots are the same for the year-based quasibinomial model.
 
 
