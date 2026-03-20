@@ -399,6 +399,8 @@ print(check_model(model_year_quasi))
 
 The diagnostic plots indicate that the year-based binomial model provides an adequate fit to the data. The posterior predictive check shows good agreement between observed and fitted distributions, while binned residuals exhibit no systematic deviations. There is no evidence of influential observations, and residuals appear well-calibrated. Minor discrepancies in the upper tail suggest slight underestimation of extreme values, but these do not materially affect the overall model fit. These plots are the same for the year-based quasibinomial model.
 
+Taken together, the models provide clear answers to both research questions. Firstly, measles susceptibility in Glasgow changed significantly relative to 1998, as evidenced by both the likelihood ratio test (p ≈ 3.23 × 10⁻⁴³) and year-specific odds ratios. Secondly, the turning point did not coincide with the 2004 retraction. The model centred at 2008 (AIC = 5115.0) outperformed the one centred at 2004 (AIC = 5156.5), and susceptibility peaked in 2008 (OR = 1.70 vs 1998) before returning to baseline by 2010–2012. This suggests a lag of approximately four years between the Wakefield retraction and a recovery in vaccination uptake. 
+
 
 # Consclusion {#sec-conc}
 <!--
