@@ -17,6 +17,4 @@ We address:
 1. **Did Glasgow exhibit a change in measles susceptibility following the retraction of the Wakefield article?**
 2. **Did any change occur specifically in 2004**
 
-Collaboration requirements:
-- Meaningful commit messages and commit comments
-- At least **one branch** created + changes reviewed + merged into `main` + branch deleted.
+
