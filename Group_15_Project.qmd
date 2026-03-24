@@ -403,6 +403,10 @@ Taken together, the models provide clear answers to both research questions. Fir
 
 
 # Consclusion {#sec-conc}
+
+In this report, we investigated the proportion of measles susceptibility in Glasgow between 1998 and 2012 in relation to the Wakefield article retraction in 2004. We initially used a binomial model to represent the data but subsequently tested with a quasibinomial model to account for overdispersion; ultimately both models led to the same conclusions. By comparing a null model with a year-specific model using a likelihood-ratio test, we have significant evidence that the proportion of children susceptible to measles increased in 2000, 2002, 2004, and 2008, returning to baseline levels in 2010 and 2012. To determine whether the turning point in susceptibility rate occurred alongside the retraction of the Wakefield article in 2004, we compared models centred at 2004 and 2008. We chose to compare the 2004-centred model with one centred at 2008 as our exploratory analysis shows initial evidence that this is where the true turning point occurs. As the model centred at 2008 had a lower AIC than the model centred at 2004, the 2008-centred model fits the data better and hence we have significant evidence that the turning point lagged four years behind the article's retraction. This delay in decline could be due to the period between vaccinations as the vaccine is offered to children 12-13 months old and 4-5 years old. 
+
+
 <!--
 TB(brief conclusion)
 The results indicate that measles susceptibility varied significantly across years. Compared with 1998, susceptibility increased significantly in the early 2000s and peaked around 2008, before declining in later years. Evidence of overdispersion suggests that the quasibinomial model provides more reliable standard errors, but the overall conclusions remain unchanged
